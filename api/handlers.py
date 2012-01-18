@@ -13,40 +13,36 @@ class PostHandler(BaseHandler):
     # - Response: {"id":"id"} 
 
     def create(self, request):
-        if request.content_type:
-            data = request.data
-            posting_api_access_key = data['api_access_key']
-            posting_msg = data['message']
+        data = request.data
+        posting_api_access_key = data['api_access_key']
+        posting_msg = data['message']
 
-            try:
-                posting_person = Person.objects.get(api_access_key=posting_api_access_key)
-            except ObjectDoesNotExist:
-                resp = rc.FORBIDDEN
-                resp.wirte('The api_access_key=' + posting_api_access_key + ' is not available.'
-                           + ' Please sign in first.')
-                return resp
+        try:
+            posting_person = Person.objects.get(api_access_key=posting_api_access_key)
+        except ObjectDoesNotExist:
+            resp = rc.FORBIDDEN
+            resp.wirte('The api_access_key=' + posting_api_access_key + ' is not available.'
+                      + ' Please sign in first.')
+            return resp
             
-            posting_fb_id = posting_person.fb_id
-            posting_fb_access_token = posting_person.fb_access_token
+        posting_fb_id = posting_person.fb_id
+        posting_fb_access_token = posting_person.fb_access_token
 
-            args = {
-                'message': posting_msg,
-            }
+        args = {
+            'message': posting_msg,
+        }
 
-            post_data = {
-                'id': posting_fb_id,
-                'access_token': posting_fb_access_token,
-            }
+        post_data = {
+            'id': posting_fb_id,
+            'access_token': posting_fb_access_token,
+        }
 
-            # POST method
-            fb_feed_response = urllib.urlopen('https://graph.facebook.com/feed?'
-                           + urllib.urlencode(args),
+        # POST method
+        fb_feed_response = urllib.urlopen('https://graph.facebook.com/feed?'
+                         + urllib.urlencode(args),
                            urllib.urlencode(post_data))
-            fb_posting_response = json.load(fb_feed_response)
+        fb_posting_response = json.load(fb_feed_response)
             
-            resp = rc.CREATED
-            resp.write(fb_posting_response)
-            return resp
-        else:
-            resp = rc.NOT_IMPLEMENTED
-            return resp
+        resp = rc.CREATED
+        resp.write(fb_posting_response)
+        return resp

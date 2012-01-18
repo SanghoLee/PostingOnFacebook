@@ -1,0 +1,25 @@
+### NOTICE: This code is just for TEST!!! ####
+
+# Django + Facebook Graph API authentication
+This is a django app to use the new Graph API authentication with Django. It uses the standard authentication build into Django.
+And If you write a posting here, we will write your posting on your Facebook.
+
+Make sure you read http://developers.facebook.com/docs/authentication/ to have an idea of how this is intended to work.
+
+## Basic setup for example project
+1. Come to here(PostingOnFacebook/)
+2. Set up the FACEBOOK_APP_ID and FACEBOOK_APP_SECRET to your Facebook app (Set one up at https://developers.facebook.com/apps)
+3. Run `python manage.py syncdb`
+4. Run `python manage.py runserver`
+5. Go to http://localhost:8000 and Signin! Try to write a posting!
+
+## settings.py
+Here are the differences between a base Django settings.py and the ones needed for the example project to run:
+
+    FACEBOOK_APP_ID = os.environ['FACEBOOK_APP_ID']
+    FACEBOOK_APP_SECRET = os.environ['FACEBOOK_APP_SECRET']
+    FACEBOOK_SCOPE = 'publish_stream,offline_access'
+    INSTALLED_APPS = ['PostingOnFacebook.post']
+
+##  Thank to Laurent Luce and dickeytk!
+This code references http://www.laurentluce.com/posts/facebook-connect-with-django/ project and https://github.com/dickeytk/django_facebook_oauth code.

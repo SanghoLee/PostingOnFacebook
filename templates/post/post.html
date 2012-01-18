@@ -1,0 +1,31 @@
+<html>
+    <head>
+      <title>SanghoLee's Small Project</title>
+    </head>
+    <body>
+      <div id='posting'>
+        <h1> Write your posting! </h1>
+        <h3> {{ message }} </h3>
+        <h3>If you post a message here,<br> we will post your message on your facebook!</h3>
+        <form method="post" action="/post/post/">{% csrf_token %}
+            <textarea name="posting_msg" cols="40" rows="5">Enter your posting here...</textarea><br>
+            <input type="submit" value="POST"/>
+            <input name = 'username' type="hidden" value="{{ username }}" />
+        </form>
+        {% if api_access_key %}
+        <h4> Please keep this key securely! </h4>
+             API access key = {{ api_access_key }}
+
+        {% endif %}
+        {% if fb_posting_response %}
+        <h4> Facebook Posting Response:</h4>
+        Posting message = {{ fb_posting_message }} <br>
+        {{ fb_posting_response|pprint }}
+        {% endif %}
+      </div>
+      <div>
+      <br>
+      <a href='/'>Go to login/signin page</a>
+      </div>
+   </body>
+ </html>

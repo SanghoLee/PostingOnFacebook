@@ -1,0 +1,27 @@
+<html>
+    <head>
+      <title>SanghoLee's Small Project</title>
+    </head>
+    <body>
+      <div id='welcome-message'>
+        <h3>If you post a message here,<br> we will post your message on your facebook!</h3>
+        {% if message %}
+            <h3>{{ message }}</h3>
+        {% else %}
+            <h3>Please login or signin to use this service!</h3>
+        {% endif %}
+        <form method="post" action="/post/login/">{% csrf_token %}
+            Username: <input type="text" name="username" /><br/>
+            Password: <input type="password" name="password" /><br/>
+            <input type="submit" value="Login/Signin"/>
+        </form>
+        <h4>This service is just for TEST! <br>
+            Please be careful for using your important private informations.<br>
+            NOTICE: The password will not be encrypted.</h4>
+      </div>
+      <div>
+      <br>
+      <a href='/'>Go to login/signin page</a>
+      </div>
+   </body>
+ </html>

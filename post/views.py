@@ -2,6 +2,7 @@
 import random
 import cgi
 import urllib
+import urlparse
 import json
 
 from django.http import HttpResponse, HttpResponseRedirect
@@ -118,6 +119,20 @@ def login(request):
 
 
 def callback(request):
+    # Error Handling 
+    # If a facebook user deny this facebook app to access his/her account.
+    # example callback redirected url
+    # http://URL/post/callback/?error_reason=user_denied&error=access_denied
+    #      &error_description=The+user+denied+your+request.
+
+    error = request.GET.get('error')
+    if error is not None:
+        error_description = request.GET.get('error_description')
+        response_msg = 'We\'re sorry! Something wrong... Facebook user deny this Facebook App to access his/her accout. We got message from Facebook: ' + error_description + ' Please login/singin again!'
+        return render_to_response('post/index.html',
+                                  {'message': response_msg },
+                                  context_instance=RequestContext(request))
+
    # id of oauth request
     posting_username = ''
     if request.session.get('posting_username', False):
@@ -282,7 +297,32 @@ def post(request):
                            urllib.urlencode(post_data))
     fb_posting_response = json.load(fb_feed_response)
 
-    # TODO: ERROR Handling - access_token invalid, maybe need to update(re-generate) access_token
+    # ERROR Handling - access_token invalid, maybe need to update(re-generate) access_token
+    # Response JSON data examples
+    # Case.1) Succeeded
+    # - {'id':"100000035645416_351835714827614"}
+    #
+    # Case.2) Failed
+    # - {
+    #     'error': {
+    #         'type':"OAuthException",
+    #         'message':"(#200) The user hasn't authorized the application to perform this action"
+    #      }
+    #   }
+    # - another error message:
+    #   Error validating access token: User 100000035645416 has not authorized application 341315122562968.
+
+    if 'error' in fb_posting_response:
+        # delete invalid fb_access_token. we need to reissue access_token.
+        posting_person.fb_id = None # just for clearing facebook info.
+        posting_person.fb_access_token = None
+        posting_person.save() # update row
+
+        response_msg = 'we\'re sorry! something wrong... The Facebook access_token is invalidated. We got error message from Facebook: ' + fb_posting_response['error']['message'] + ' please login again!'
+        return render_to_response('post/index.html',
+                                  {'message': response_msg },
+                                  context_instance=RequestContext(request))
+        
     response_msg = 'Posting succeeded! Do more!'
     return render_to_response('post/post.html',
                               {'api_access_key': None,

@@ -1,6 +1,7 @@
 from piston.handler import BaseHandler
 from post.models import Person
 from piston.utils import rc
+from django.core.exceptions import ObjectDoesNotExist
 
 import urllib
 import json
@@ -21,12 +22,18 @@ class PostHandler(BaseHandler):
             posting_person = Person.objects.get(api_access_key=posting_api_access_key)
         except ObjectDoesNotExist:
             resp = rc.FORBIDDEN
-            resp.wirte('The api_access_key=' + posting_api_access_key + ' is not available.'
-                      + ' Please sign in first.')
+            resp.write({"error":{"type":"ApiAccessKeyException", "message":"Invalid api_access_key. api_access_key=" + posting_api_access_key}})
             return resp
             
         posting_fb_id = posting_person.fb_id
         posting_fb_access_token = posting_person.fb_access_token
+
+        # Access_token doesn't be issued yet
+        if posting_fb_id is None or posting_fb_access_token is None:
+            resp = rc.FORBIDDEN
+            resp.write({"error": {"type":"OAuthException", "message":"access_token doesn't be issued yet. Please login first."}})
+            return resp
+
 
         args = {
             'message': posting_msg,
@@ -42,7 +49,20 @@ class PostHandler(BaseHandler):
                          + urllib.urlencode(args),
                            urllib.urlencode(post_data))
         fb_posting_response = json.load(fb_feed_response)
+
+        # Access_token is invalidated
+        if 'error' in fb_posting_response:
+            # delete invalid fb_access_token. we need to reissue access_token.
+            posting_person.fb_id = None # just for clearing facebook info.
+            posting_person.fb_access_token = None
+            posting_person.save() # update row
             
-        resp = rc.CREATED
+            resp = rc.FORBIDDEN
+            error_message = fb_posting_response['error']['message']
+            error_message = error_message + ' The access_token is invalidated. Please login again.'
+            fb_posting_response['error']['message'] = error_message
+        else:
+            resp = rc.CREATED
+
         resp.write(fb_posting_response)
         return resp
